@@ -1,10 +1,5 @@
-// Only load .env in local dev — Render injects env vars directly
-if (process.env.NODE_ENV !== 'production') {
-  require('dotenv').config();
-}
 const express = require('express');
 const cors = require('cors');
-const Anthropic = require('@anthropic-ai/sdk');
 const path = require('path');
 const fs = require('fs');
 
@@ -20,8 +15,6 @@ app.get('/dashboard', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'dashboard.html'));
 });
 
-console.log('ANTHROPIC_API_KEY loaded:', process.env.ANTHROPIC_API_KEY ? `${process.env.ANTHROPIC_API_KEY.slice(0, 10)}…` : 'MISSING');
-console.log('API KEY FIRST 20 CHARS:', process.env.ANTHROPIC_API_KEY?.substring(0, 20));
 
 function readResults() {
   try {
@@ -44,8 +37,14 @@ app.get('/api/test', (req, res) => {
 
 // ── ANALYSE ──────────────────────────────────────────────────────────────────
 app.post('/api/analyse', async (req, res) => {
-  const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
   try {
+    const apiKey = process.env.ANTHROPIC_API_KEY;
+    console.log('Key length:', apiKey ? apiKey.length : 'undefined');
+    console.log('Key start:', apiKey ? apiKey.substring(0, 15) : 'undefined');
+
+    const { Anthropic } = require('@anthropic-ai/sdk');
+    const client = new Anthropic({ apiKey });
+
     const { answers, traits, careers, questions, activities, grades } = req.body;
 
     const answersText = questions.map((q, i) => {
@@ -106,8 +105,14 @@ Speak as you. Warm, specific, direct. Max 420 words.`;
 
 // ── CHAT ─────────────────────────────────────────────────────────────────────
 app.post('/api/chat', async (req, res) => {
-  const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
   try {
+    const apiKey = process.env.ANTHROPIC_API_KEY;
+    console.log('Key length:', apiKey ? apiKey.length : 'undefined');
+    console.log('Key start:', apiKey ? apiKey.substring(0, 15) : 'undefined');
+
+    const { Anthropic } = require('@anthropic-ai/sdk');
+    const client = new Anthropic({ apiKey });
+
     const { messages, profile } = req.body;
 
     const system = `You are PathFinder AI Career Coach — warm, direct, and expert at guiding students aged 14-22.
