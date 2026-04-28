@@ -21,11 +21,7 @@ app.get('/dashboard', (req, res) => {
 });
 
 console.log('ANTHROPIC_API_KEY loaded:', process.env.ANTHROPIC_API_KEY ? `${process.env.ANTHROPIC_API_KEY.slice(0, 10)}…` : 'MISSING');
-
-// Always read from env at call time so Render env vars are never stale
-function getClient() {
-  return new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
-}
+console.log('API KEY FIRST 20 CHARS:', process.env.ANTHROPIC_API_KEY?.substring(0, 20));
 
 function readResults() {
   try {
@@ -48,6 +44,7 @@ app.get('/api/test', (req, res) => {
 
 // ── ANALYSE ──────────────────────────────────────────────────────────────────
 app.post('/api/analyse', async (req, res) => {
+  const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
   try {
     const { answers, traits, careers, questions, activities, grades } = req.body;
 
@@ -94,8 +91,8 @@ Write a warm personalised career analysis with these sections in bold:
 
 Speak as you. Warm, specific, direct. Max 420 words.`;
 
-    const message = await getClient().messages.create({
-      model: 'claude-sonnet-4-6',
+    const message = await client.messages.create({
+      model: 'claude-haiku-4-5-20251001',
       max_tokens: 1024,
       messages: [{ role: 'user', content: promptText }]
     });
@@ -109,6 +106,7 @@ Speak as you. Warm, specific, direct. Max 420 words.`;
 
 // ── CHAT ─────────────────────────────────────────────────────────────────────
 app.post('/api/chat', async (req, res) => {
+  const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
   try {
     const { messages, profile } = req.body;
 
@@ -121,8 +119,8 @@ Student profile:
 
 Answer questions with empathy and specificity. Be concise — max 120 words per reply. Reference their profile when relevant.`;
 
-    const message = await getClient().messages.create({
-      model: 'claude-sonnet-4-6',
+    const message = await client.messages.create({
+      model: 'claude-haiku-4-5-20251001',
       max_tokens: 400,
       system,
       messages
