@@ -1,4 +1,7 @@
-require('dotenv').config();
+// Only load .env in local dev — Render injects env vars directly
+if (process.env.NODE_ENV !== 'production') {
+  require('dotenv').config();
+}
 const express = require('express');
 const cors = require('cors');
 const Anthropic = require('@anthropic-ai/sdk');
@@ -18,6 +21,7 @@ app.get('/dashboard', (req, res) => {
 });
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+console.log('ANTHROPIC_API_KEY loaded:', process.env.ANTHROPIC_API_KEY ? `${process.env.ANTHROPIC_API_KEY.slice(0, 10)}…` : 'MISSING');
 
 function readResults() {
   try {
@@ -28,6 +32,15 @@ function readResults() {
 function writeResults(data) {
   fs.writeFileSync(RESULTS_FILE, JSON.stringify(data, null, 2), 'utf8');
 }
+
+// ── TEST ─────────────────────────────────────────────────────────────────────
+app.get('/api/test', (req, res) => {
+  const key = process.env.ANTHROPIC_API_KEY;
+  res.json({
+    keyPresent: !!key,
+    keyPreview: key ? key.slice(0, 10) : null
+  });
+});
 
 // ── ANALYSE ──────────────────────────────────────────────────────────────────
 app.post('/api/analyse', async (req, res) => {
