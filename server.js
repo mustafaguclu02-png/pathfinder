@@ -20,8 +20,12 @@ app.get('/dashboard', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'dashboard.html'));
 });
 
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 console.log('ANTHROPIC_API_KEY loaded:', process.env.ANTHROPIC_API_KEY ? `${process.env.ANTHROPIC_API_KEY.slice(0, 10)}…` : 'MISSING');
+
+// Always read from env at call time so Render env vars are never stale
+function getClient() {
+  return new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+}
 
 function readResults() {
   try {
@@ -90,7 +94,7 @@ Write a warm personalised career analysis with these sections in bold:
 
 Speak as you. Warm, specific, direct. Max 420 words.`;
 
-    const message = await client.messages.create({
+    const message = await getClient().messages.create({
       model: 'claude-sonnet-4-6',
       max_tokens: 1024,
       messages: [{ role: 'user', content: promptText }]
@@ -98,8 +102,8 @@ Speak as you. Warm, specific, direct. Max 420 words.`;
 
     res.json({ text: message.content[0].text });
   } catch (err) {
-    console.error('Analysis error:', err.message);
-    res.status(500).json({ error: 'Failed to generate analysis' });
+    console.error('Analysis error — status:', err.status, '| type:', err.error?.type, '| message:', err.message);
+    res.status(500).json({ error: 'Failed to generate analysis', detail: err.message });
   }
 });
 
@@ -117,7 +121,7 @@ Student profile:
 
 Answer questions with empathy and specificity. Be concise — max 120 words per reply. Reference their profile when relevant.`;
 
-    const message = await client.messages.create({
+    const message = await getClient().messages.create({
       model: 'claude-sonnet-4-6',
       max_tokens: 400,
       system,
@@ -126,8 +130,8 @@ Answer questions with empathy and specificity. Be concise — max 120 words per 
 
     res.json({ text: message.content[0].text });
   } catch (err) {
-    console.error('Chat error:', err.message);
-    res.status(500).json({ error: 'Failed to respond' });
+    console.error('Chat error — status:', err.status, '| type:', err.error?.type, '| message:', err.message);
+    res.status(500).json({ error: 'Failed to respond', detail: err.message });
   }
 });
 
